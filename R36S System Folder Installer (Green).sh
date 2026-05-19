@@ -61,7 +61,112 @@ done
 
 sleep 0.2
 
-echo "Creating '$BIN/Change LED to Red.sh'..."
+echo "Creating 'batt_life_warning.py.red' ..."
+sleep 0.2
+	cat > "$BIN/batt_life_warning.py.red" << 'EOF'
+#!/usr/bin/env python3
+
+import os
+import sys
+import time
+
+batt_life = "/sys/class/power_supply/battery/capacity"
+pwr_led = "/sys/class/gpio/gpio77/value"
+
+while(True):
+        if int(open(batt_life, "r").read()) <= 10:
+                if int(open(pwr_led, "r").read()) == 1:
+                        f = open(pwr_led, "w")
+                        f.write("0")
+                        f.close()
+                        time.sleep(1)
+                else:
+                        f = open(pwr_led, "w")
+                        f.write("1")
+                        f.close()
+                        time.sleep(1)
+
+        elif int(open(batt_life, "r").read()) <= 20:
+                if int(open(pwr_led, "r").read()) == 1:
+                        f = open(pwr_led, "w")
+                        f.write("0")
+                        f.close()
+                        time.sleep(30)
+                else:
+                        time.sleep(30)
+        else:
+                if int(open(pwr_led, "r").read()) == 0:
+                        f = open(pwr_led, "w")
+                        f.write("1")
+                        f.close()
+                        time.sleep(30)
+                else:
+                        time.sleep(30)
+EOF
+
+echo "Creating 'batt_life_warning.py.green' ..."
+sleep 0.2
+	cat > "$BIN/batt_life_warning.py.green" << 'EOF'
+#!/usr/bin/env python3
+
+import os
+import sys
+import time
+
+batt_life = "/sys/class/power_supply/battery/capacity"
+pwr_led = "/sys/class/gpio/gpio77/value"
+
+while(True):
+        if int(open(batt_life, "r").read()) <= 10:
+                if int(open(pwr_led, "r").read()) == 1:
+                        f = open(pwr_led, "w")
+                        f.write("0")
+                        f.close()
+                        time.sleep(1)
+                else:
+                        f = open(pwr_led, "w")
+                        f.write("1")
+                        f.close()
+                        time.sleep(1)
+
+        elif int(open(batt_life, "r").read()) <= 20:
+                if int(open(pwr_led, "r").read()) == 1:
+                        f = open(pwr_led, "w")
+                        f.write("0")
+                        f.close()
+                        time.sleep(30)
+                else:
+                        time.sleep(30)
+        else:
+                if int(open(pwr_led, "r").read()) == 1:
+                        f = open(pwr_led, "w")
+                        f.write("0")
+                        f.close()
+                        time.sleep(30)
+                else:
+                        time.sleep(30)
+EOF
+
+echo "Creating 'fix_power_led.red' ..."
+sleep 0.2
+	cat > "$BIN/fix_power_led.red" << 'EOF'
+#!/bin/bash
+echo 77 > /sys/class/gpio/export 2>/dev/null || true
+echo out > /sys/class/gpio/gpio77/direction
+echo 1 > /sys/class/gpio/gpio77/value
+EOF
+
+echo "Creating 'fix_power_led.green' ..."
+sleep 0.2
+	cat > "$BIN/fix_power_led.green" << 'EOF'
+#!/bin/bash
+echo 77 > /sys/class/gpio/export 2>/dev/null || true
+echo out > /sys/class/gpio/gpio77/direction
+echo 0 > /sys/class/gpio/gpio77/value
+EOF
+
+echo "Creating 'Change LED to Red.sh' ..."
+sleep 0.2
 	cat > "$BIN/Change LED to Red.sh" << 'EOF'
 #!/bin/bash
 
@@ -90,9 +195,8 @@ printf "\033c" >> /dev/tty1
 sudo systemctl restart emulationstation
 EOF
 
+echo "Creating 'Change LED to Green.sh' ..."
 sleep 0.2
-
-echo "Creating '$BIN/Change LED to Green.sh' ..."
 	cat > "$BIN/Change LED to Green.sh" << 'EOF'
 #!/bin/bash
 
@@ -121,20 +225,32 @@ printf "\033c" >> /dev/tty1
 sudo systemctl restart emulationstation
 EOF
 
+echo "Copying 'Change LED to Red.sh'..."
 sleep 0.2
-
-echo "Copying '$SYS/Change LED to Red.sh'..."
 cp "$BIN/Change LED to Red.sh" "${SYS}/."
+
+echo "Creating 'fix-power-led.service'..."
 sleep 0.2
+cat > "/etc/systemd/system/fix-power-led.service" << 'EOF'
+[Unit]
+Description=Initialize Power LED GPIO
+Before=batt_led.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/fix_power_led
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
 
 echo "Removing old files ..."
+sleep 0.2
 rm -f "$BIN/Change LED to Blue.sh" >/dev/null 2>&1
 rm -f "$OPT/Change LED to Red.sh" >/dev/null 2>&1
-rm -f "$OPT/Change LED to Blue.sh" >/dev/null 2>&1
-sleep 0.2
 
 echo ""
-
 echo "Downloading and installing scripts by djparentx"
 echo "-----------------------------------------------"
 
@@ -192,6 +308,13 @@ chmod +x "$BIN/Change LED to Red.sh"
 chmod +x "$BIN/Change LED to Green.sh"
 chmod +x "$SYS/Change LED to Red.sh"
 sleep 0.2
+
+echo "Starting service..."
+chmod +x /usr/local/bin/fix_power_led.red /usr/local/bin/fix_power_led.green
+cp "$BIN/fix_power_led.red" "$BIN/fix_power_led"
+chmod +x "$BIN/fix_power_led"
+systemctl enable fix-power-led
+systemctl daemon-reload
 
 echo ""
 echo "Finished! Wait for EmulationStation to restart..."
