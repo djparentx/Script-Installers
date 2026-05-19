@@ -1,5 +1,5 @@
 # Script Installers
-You only need run one of the scripts, choose the install destination by script.
+You only need run one of the scripts, choose the install destination by script. They are self-deleting when finished. 
 
 ## Script Installer (Tools)
 - Installs Wi-Fi Manager and BT Manager to /opt/system
