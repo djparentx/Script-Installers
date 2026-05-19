@@ -16,6 +16,7 @@ You only need run one of the scripts, choose the install destination by script.
 
 ## System Folder Installer
 - Run Blue version if blue LED, Green version if green LED
+- Creates a new folder at /opt/system/System
 - Installs Wi-Fi Manager and BT Manager to /opt/system
 - Installs the following scripts to /opt/system/System:
    - CPU Manager
