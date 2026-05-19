@@ -14,7 +14,7 @@ You only need run one of the scripts, choose the install destination by script. 
 
 ---
 
-## System Folder Installer
+## System Folder Installer (dArkOS only)
 - Run Blue version if blue LED, Green version if green LED
 - Creates a new folder at /opt/system/System
 - Installs Wi-Fi Manager and BT Manager to /opt/system
@@ -22,7 +22,7 @@ You only need run one of the scripts, choose the install destination by script. 
    - CPU Manager
    - Button Mapper for Scripts
    - RetroArch One-Click Backup
-   - SYSTEMS Manager (dArkOS only)
+   - SYSTEMS Manager
 - Installs the following scripts to /opt/system/Tools:
    - R36S Battery Calibration Tool
    - Dave's Retro Shaders
