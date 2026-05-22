@@ -31,6 +31,7 @@ old_scripts=(
     "ZRam Manager.sh"
     "Wifi.sh"
     "Wifi Toggle.sh"
+	"Wifi-Toggle.sh"
     "Remove ._ Files.sh"
     "PS1 - Generate m3u files.sh"
     "PS1 - Delete m3u files.sh"
@@ -47,12 +48,15 @@ done
 system_scripts=(
     "R36 Control.sh"
 	"Change Password.sh"
+	"Change Time.sh"
 	"Restore Default Drastic Settings.sh"
 	"Restore Default KODI Controls.sh"
 	"System Info.sh"
 	"Update.sh"
 	"USB Drive Mount.sh"
 	"USB Drive Unmount.sh"
+	"Set Launchimage to ascii or pic.sh"
+	"Set Launchimage to vid.sh"
 )
 
 for f in "${system_scripts[@]}"; do
@@ -61,9 +65,11 @@ done
 
 sleep 0.2
 
-echo "Creating 'batt_life_warning.py.red' ..."
-sleep 0.2
-	cat > "$BIN/batt_life_warning.py.red" << 'EOF'
+if [[ ! -f "$SYS/Change LED to Red.sh" && ! -f "$SYS/Change LED to Green.sh" ]]; then
+	if grep -qi "^ID=debian" /etc/os-release; then
+		echo "Creating 'batt_life_warning.py.red' ..."
+		sleep 0.2
+		cat > "$BIN/batt_life_warning.py.red" << 'EOF'
 #!/usr/bin/env python3
 
 import os
@@ -104,9 +110,9 @@ while(True):
                         time.sleep(30)
 EOF
 
-echo "Creating 'batt_life_warning.py.green' ..."
-sleep 0.2
-	cat > "$BIN/batt_life_warning.py.green" << 'EOF'
+		echo "Creating 'batt_life_warning.py.green' ..."
+		sleep 0.2
+		cat > "$BIN/batt_life_warning.py.green" << 'EOF'
 #!/usr/bin/env python3
 
 import os
@@ -147,26 +153,50 @@ while(True):
                         time.sleep(30)
 EOF
 
-echo "Creating 'fix_power_led.red' ..."
-sleep 0.2
-	cat > "$BIN/fix_power_led.red" << 'EOF'
+		echo "Creating 'fix-power-led.service'..."
+		sleep 0.2
+		cat > "/etc/systemd/system/fix-power-led.service" << 'EOF'
+[Unit]
+Description=Initialize Power LED GPIO
+Before=batt_led.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/fix_power_led
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+		echo "Creating 'fix_power_led.red' ..."
+		sleep 0.2
+		cat > "$BIN/fix_power_led.red" << 'EOF'
 #!/bin/bash
 echo 77 > /sys/class/gpio/export 2>/dev/null || true
 echo out > /sys/class/gpio/gpio77/direction
 echo 1 > /sys/class/gpio/gpio77/value
 EOF
 
-echo "Creating 'fix_power_led.green' ..."
-sleep 0.2
-	cat > "$BIN/fix_power_led.green" << 'EOF'
+		echo "Creating 'fix_power_led.green' ..."
+		sleep 0.2
+		cat > "$BIN/fix_power_led.green" << 'EOF'
 #!/bin/bash
 echo 77 > /sys/class/gpio/export 2>/dev/null || true
 echo out > /sys/class/gpio/gpio77/direction
 echo 0 > /sys/class/gpio/gpio77/value
 EOF
+	
+		echo "Starting service..."
+		chmod +x /usr/local/bin/fix_power_led.red /usr/local/bin/fix_power_led.green
+		cp "$BIN/fix_power_led.red" "$BIN/fix_power_led"
+		chmod +x "$BIN/fix_power_led"
+		systemctl enable fix-power-led
+		systemctl daemon-reload
+	fi
 
-echo "Creating 'Change LED to Red.sh' ..."
-sleep 0.2
+	echo "Creating 'Change LED to Red.sh' ..."
+	sleep 0.2
 	cat > "$BIN/Change LED to Red.sh" << 'EOF'
 #!/bin/bash
 
@@ -195,8 +225,8 @@ printf "\033c" >> /dev/tty1
 sudo systemctl restart emulationstation
 EOF
 
-echo "Creating 'Change LED to Green.sh' ..."
-sleep 0.2
+	echo "Creating 'Change LED to Green.sh' ..."
+	sleep 0.2
 	cat > "$BIN/Change LED to Green.sh" << 'EOF'
 #!/bin/bash
 
@@ -225,30 +255,15 @@ printf "\033c" >> /dev/tty1
 sudo systemctl restart emulationstation
 EOF
 
-echo "Copying 'Change LED to Red.sh'..."
-sleep 0.2
-cp "$BIN/Change LED to Red.sh" "${SYS}/."
+	echo "Copying 'Change LED to Red.sh'..."
+	sleep 0.2
+	cp "$BIN/Change LED to Red.sh" "${SYS}/."
 
-echo "Creating 'fix-power-led.service'..."
-sleep 0.2
-cat > "/etc/systemd/system/fix-power-led.service" << 'EOF'
-[Unit]
-Description=Initialize Power LED GPIO
-Before=batt_led.service
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/fix_power_led
-RemainAfterExit=yes
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-echo "Removing old files ..."
-sleep 0.2
-rm -f "$BIN/Change LED to Blue.sh" >/dev/null 2>&1
-rm -f "$OPT/Change LED to Red.sh" >/dev/null 2>&1
+	echo "Removing old files ..."
+	rm -f "$BIN/Change LED to Blue.sh" >/dev/null 2>&1
+	rm -f "$OPT/Change LED to Red.sh" >/dev/null 2>&1
+	sleep 0.2
+fi
 
 echo ""
 echo "Downloading and installing scripts by djparentx"
@@ -309,18 +324,10 @@ chmod +x "$BIN/Change LED to Green.sh"
 chmod +x "$SYS/Change LED to Red.sh"
 sleep 0.2
 
-echo "Starting service..."
-chmod +x /usr/local/bin/fix_power_led.red /usr/local/bin/fix_power_led.green
-cp "$BIN/fix_power_led.red" "$BIN/fix_power_led"
-chmod +x "$BIN/fix_power_led"
-systemctl enable fix-power-led
-systemctl daemon-reload
-
 echo ""
 echo "Finished! Wait for EmulationStation to restart..."
 sleep 2
 
-touch /tmp/es-restart
-killall emulationstation
-
 rm -f "$0"
+touch /tmp/es-restart
+pkill -f "/usr/bin/emulationstation/emulationstation$"
