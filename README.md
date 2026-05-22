@@ -40,8 +40,8 @@ Both installers now work for ArkOS and dArkOS. The System Folder Installer is id
    - Update
    - USB Drive Mount
    - USB Drive Unmount
-   - Set Launchimage to ascii or pic.sh
-   - Set Launchimage to vid.sh
+   - Set Launchimage to ascii or pic
+   - Set Launchimage to vid
 - Moves the following scripts to /roms/backup/old scripts:
    - ZRam Manager
    - Wifi
