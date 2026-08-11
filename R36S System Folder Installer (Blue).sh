@@ -286,7 +286,7 @@ curl -L "$URL" -o "${SYS}/CPU Manager.sh" && echo "Success. Installed to $SYS" |
 
 if grep -qi "^ID=debian" /etc/os-release; then
 	echo "Downloading SYSTEMS Manager..."
-	URL=$(curl -s https://api.github.com/repos/djparentx/SYSTEMS-Manager-for-dArkOS-RE/releases/latest \
+	URL=$(curl -s https://api.github.com/repos/djparentx/SYSTEMS-Manager-for-dArkOS/releases/latest \
 		| python3 -c "import sys,json; print(json.load(sys.stdin)['assets'][0]['browser_download_url'])")
 	curl -L "$URL" -o "${SYS}/SYSTEMS Manager.sh" && echo "Success. Installed to $SYS" || echo "Failed."
 fi
